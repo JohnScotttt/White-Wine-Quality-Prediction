@@ -13,8 +13,8 @@ from sklearn.discriminant_analysis import StandardScaler
 
 # 运行参数
 parser = argparse.ArgumentParser()
-parser.add_argument('--batch_size', type=int, default=256) # batch size 一批处理的数据量
-parser.add_argument('--epochs', type=int, default=1500) # 总的迭代次数
+parser.add_argument('--batch_size', type=int, default=64) # batch size 一批处理的数据量
+parser.add_argument('--epochs', type=int, default=200) # 总的迭代次数
 parser.add_argument('--use_cuda', type=int, default=False) # 是否使用GPU训练 若使用GPU，请将False改为Ture
 
 args = parser.parse_args()
@@ -24,7 +24,7 @@ data = pd.read_csv('winequality-white.csv', delimiter=';') # 载入数据集
 X = data.iloc[:, :-1].values # 分离出参数 X
 y = data.iloc[:, -1].values # 分离出标签 Y （3 ~ 9）
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1) # 划分训练/测试数据
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1) # 划分训练/测试数据
 
 # 标准化数据集：
 sc = StandardScaler()
@@ -45,18 +45,15 @@ test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True)
 
-# 自定义网络结构，包含三个全连接层和两个relu激活函数
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.fc1 = nn.Linear(11, 64)
-        self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, 10)
+        self.fc2 = nn.Linear(64, 10)
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = self.fc2(x)
-        x = self.fc3(x)
         return x
 # 实例化网络
 net = Net()
@@ -73,8 +70,7 @@ def train():
         os.mkdir("./output")
 
     loss_func = nn.CrossEntropyLoss() # 定义损失函数为交叉熵损失函数
-    optimizer = torch.optim.SGD(net.parameters(), lr=0.5) # 定义优化器
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, [300, 900, 1200], 0.1)
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.1) # 定义优化器
 
     # --------------------------开始训练------------------------
     for epoch in range(args.epochs): 
